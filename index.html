@@ -41,6 +41,7 @@
   .allso-title-sub,
   .allso-quick,
   .allso-list-view,
+  .allso-list-view--lock,
   .allso-selectbar,
   .allso-selectwrap,
   .allso-select,
@@ -143,7 +144,8 @@
   }
   @media (max-width: 359.98px) { .allso-title-sub { display: none; } }
 
-  .allso-list-view > * { flex-shrink: 0; }  /* 내부 스크롤 영역에서 헤더 등이 찌그러지지 않게 */
+  .allso-list-view > * { flex-shrink: 0; }
+  .allso-list-view.allso-list-view--lock { overflow-y: hidden; }  /* 단원 박스가 열려 있는 동안 뒤 화면 스크롤 잠금 */  /* 내부 스크롤 영역에서 헤더 등이 찌그러지지 않게 */
   .allso-list-view { background: #fff; height: 100vh; overflow-y: auto; }  /* 목록: 내부 스크롤(문서는 스크롤되지 않아 주소창 유지) */
   @supports (height: 100dvh) { .allso-list-view { height: 100dvh; } }
   .allso-selectbar { padding: 12px 16px; background: #fff; border-bottom: 1px solid #e2e8f0; }
@@ -157,7 +159,9 @@
   .allso-select-chev { transition: transform .15s; }
   .allso-select-chev--open { transform: translateY(-50%) rotate(180deg); }
   .allso-dropdown { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 20; background: #fff; border: 1px solid #cfe0f7;
-    border-radius: 12px; box-shadow: 0 8px 24px rgba(30,41,59,.14); overflow: hidden; }
+    border-radius: 12px; box-shadow: 0 8px 24px rgba(30,41,59,.14); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
+    max-height: min(360px, calc(100vh - 150px)); }  /* 길면 박스 안에서만 스크롤 */
+  @supports (height: 100dvh) { .allso-dropdown { max-height: min(360px, calc(100dvh - 150px)); } }
   .allso-dropdown-item { display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; background: #fff;
     padding: 14px 16px; font-size: 16.33px; color: #1e293b; border-top: 1px solid #eef2f7; }
   .allso-dropdown-item:first-child { border-top: 0; }
@@ -395,7 +399,7 @@ function closeView() {
 // ---- 단원 선택(직접 만든 둥근 목록; 실제 값은 숨은 select가 보관) ----
 const unitBtn = $("unitBtn"), unitMenu = $("unitMenu"), unitChev = $("unitChev");
 function closeUnitMenu() {
-  unitMenu.classList.add(HIDDEN); unitChev.classList.remove("allso-select-chev--open"); unitBtn.setAttribute("aria-expanded", "false");
+  unitMenu.classList.add(HIDDEN); $("listView").classList.remove("allso-list-view--lock"); unitChev.classList.remove("allso-select-chev--open"); unitBtn.setAttribute("aria-expanded", "false");
 }
 function syncUnit() {
   const cur = sel.options[sel.selectedIndex];
@@ -412,7 +416,7 @@ function syncUnit() {
 }
 unitBtn.addEventListener("click", () => {
   const open = unitMenu.classList.contains(HIDDEN);
-  if (open) { unitMenu.classList.remove(HIDDEN); unitChev.classList.add("allso-select-chev--open"); unitBtn.setAttribute("aria-expanded", "true"); }
+  if (open) { $("listView").scrollTop = 0; $("listView").classList.add("allso-list-view--lock"); unitMenu.classList.remove(HIDDEN); unitChev.classList.add("allso-select-chev--open"); unitBtn.setAttribute("aria-expanded", "true"); }
   else closeUnitMenu();
 });
 document.addEventListener("click", e => { if (!$("unitMenu").contains(e.target) && !unitBtn.contains(e.target)) closeUnitMenu(); });
